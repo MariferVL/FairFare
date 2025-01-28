@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧾FairFare CLI</title>
+    <style>
+        body {
+            font-family: "Courier New", Courier, monospace;
+            background-color: black;
+            color: #00FF00;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #000;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+        }
+        .output {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="cli-output" class="output"></div>
+        <div id="cli-input" class="output"></div>
+    </div>
+
+    <script>
+    const outputDiv = document.getElementById('cli-output');
+    const inputDiv = document.getElementById('cli-input');
+
+    function printToCLI(message, isInput = false, isCurrency = false, callback = null) {
+        return new Promise((resolve) => {
+            const p = document.createElement('p');
+            p.innerHTML = message;
+            outputDiv.appendChild(p);
+
+            if (isInput) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.style.backgroundColor = 'black';
+                input.style.color = '#00FF00';
+                input.style.border = 'none';
+                input.style.borderBottom = '1px solid #00FF00';
+                input.style.width = '100%';
+                input.style.fontFamily = '"Courier New", Courier, monospace';
+                input.onkeydown = function(e) {
+                    if (e.key === 'Enter' && callback) {
+                        const inputValue = input.value;
+                        callback(inputValue);
+                        inputDiv.removeChild(input);
+                        if (isCurrency) {
+                            printToCLI(`$${inputValue}`).then(resolve);
+                        } else {
+                            printToCLI(inputValue).then(resolve);
+                        }
+                    }
+                };
+                inputDiv.appendChild(input);
+                input.focus();
+            } else {
+                resolve();
+            }
+        });
+    }
+
+    async function startCLI() {
+        await printToCLI("🍽️ Welcome to FairFare! Ready to split the bill? Let's make it easy! 🍽️");
+
+        const total_bill = parseFloat(await new Promise(resolve => printToCLI("💵 What's the grand total of the bill? <br> Please include all your delicious indulgences:", true, true, resolve)));
+        const tip_percentage = parseInt(await new Promise(resolve => printToCLI("💰 How generous are we feeling today? <br> What percentage would you like to tip our amazing servers? (e.g., 15 for 15%):", true, false, resolve)));
+        const number_of_people = parseInt(await new Promise(resolve => printToCLI("👥 How many wonderful friends are we splitting this bill with today?", true, false, resolve)));
+
+        await printToCLI("🔢 Crunching the numbers...");
+
+        const tip_amount = (tip_percentage / 100) * total_bill;
+        const total_with_tip = total_bill + tip_amount;
+        const amount_per_person = total_with_tip / number_of_people;
+
+        await printToCLI("🧾 Here's the breakdown:");
+
+        await printToCLI(`🍲 Total Bill: $${total_bill.toFixed(2)}`);
+        await printToCLI(`💸 Tip (${tip_percentage}%): $${tip_amount.toFixed(2)}`);
+        await printToCLI(`🤑 Total with Tip: $${total_with_tip.toFixed(2)}`);
+        await printToCLI(`💳 Each person should contribute: $${amount_per_person.toFixed(2)}`);
+    }
+
+    window.onload = startCLI;
+</script>
+
+</body>
+</html>
